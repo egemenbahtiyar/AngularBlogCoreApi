@@ -61,8 +61,7 @@ namespace AngularBlogCoreApi.Models
             {
                 entity.Property(e => e.CategoryName)
                     .IsRequired()
-                    .HasMaxLength(10)
-                    .IsFixedLength();
+                    .HasMaxLength(50);
             });
 
             modelBuilder.Entity<Comment>(entity =>
