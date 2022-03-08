@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AngularBlogCoreApi.Models;
+using AngularBlogCoreApi.Responses;
 
 namespace AngularBlogCoreApi.Controllers
 {
@@ -19,13 +20,52 @@ namespace AngularBlogCoreApi.Controllers
         {
             _context = context;
         }
-
+        
         // GET: api/Articles
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Article>>> GetArticle()
         {
             return await _context.Article.ToListAsync();
         }
+
+        [HttpGet("{page}/{pageSize}")]
+        public IActionResult GetArticle(int page=1,int pageSize = 5)
+        {
+            System.Threading.Thread.Sleep(3000);
+            try
+            {
+                IQueryable<Article> query;
+                query = _context.Article.Include(r => r.Category).Include(r => r.Comment).OrderByDescending(r => r.PublishDate);
+                int totalCount = query.Count();
+                var articlesResponse = query.Skip((pageSize * (page- 1))).Take(5).ToList().Select(x => new ArticleResponse
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    ContentMain = x.ContentMain,
+                    ContentSummary = x.ContentSummary,
+                    Picture = x.Picture,
+                    ViewCount = x.ViewCount,
+                    CommentCount = x.Comment.Count,
+                    Category = new CategoryResponse() { Id = x.CategoryId, Name = x.Category.CategoryName }
+
+
+                });
+                var result = new
+                {
+                    totalCount = totalCount,
+                    Articles = articlesResponse
+
+                };
+                return Ok(result);
+
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+        }
+
 
         // GET: api/Articles/5
         [HttpGet("{id}")]
