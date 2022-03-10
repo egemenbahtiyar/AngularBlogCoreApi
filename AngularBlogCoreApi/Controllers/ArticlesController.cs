@@ -27,6 +27,20 @@ namespace AngularBlogCoreApi.Controllers
         {
             return await _context.Article.ToListAsync();
         }
+        
+        [HttpGet]
+        [Route("GetArticlesWithCategory/{categoryId}/{page}/{pageSize}")]
+        public IActionResult GetArticlesWithCategory(int id, int page=1, int pageSize = 5)
+        {
+            IQueryable<Article> query = _context.Article.Include(r => r.Category).Include(r => r.Comment).Where(r => r.CategoryId == id).OrderByDescending(r => r.PublishDate);
+            var queryResult = ArticlesPagination(query,page,pageSize);
+            var result = new
+            {
+                TotalCount = queryResult.Item2,
+                Articles = queryResult.Item1
+            };
+            return Ok(result);
+        }
 
         [HttpGet("{page}/{pageSize}")]
         public IActionResult GetArticle(int page=1,int pageSize = 5)
@@ -46,7 +60,7 @@ namespace AngularBlogCoreApi.Controllers
                     Picture = x.Picture,
                     ViewCount = x.ViewCount,
                     CommentCount = x.Comment.Count,
-                    Category = new CategoryResponse() { Id = x.CategoryId, Name = x.Category.CategoryName }
+                    Category = new CategoryResponse() { Id = x.CategoryId, CategoryName = x.Category.CategoryName }
 
 
                 });
@@ -69,16 +83,28 @@ namespace AngularBlogCoreApi.Controllers
 
         // GET: api/Articles/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Article>> GetArticle(int id)
+        public IActionResult GetArticle(int id)
         {
-            var article = await _context.Article.FindAsync(id);
-
+            System.Threading.Thread.Sleep(2000);
+            var article = _context.Article.Include(r => r.Category).Include(r => r.Comment).FirstOrDefault(r => r.Id == id);
             if (article == null)
             {
                 return NotFound();
             }
+            ArticleResponse articleResponse = new ArticleResponse()
+            {
+                Id = article.Id,
+                ContentMain = article.ContentMain,
+                ContentSummary = article.ContentSummary,
+                Picture = article.Picture,
+                PublishDate = article.PublishDate,
+                Title = article.Title,
+                CommentCount = article.Comment.Count(),
+                Category = new CategoryResponse { Id = article.Category.Id, CategoryName = article.Category.CategoryName }
 
-            return article;
+            };
+
+            return Ok(articleResponse);
         }
 
         // PUT: api/Articles/5
@@ -145,5 +171,28 @@ namespace AngularBlogCoreApi.Controllers
         {
             return _context.Article.Any(e => e.Id == id);
         }
+
+        public System.Tuple<IEnumerable<ArticleResponse>,int> ArticlesPagination(IQueryable<Article>query, int page, int pageSize)
+        {
+            int totalCount = query.Count();
+
+            var articlesResponse = query.Skip((pageSize * (page - 1))).Take(5).ToList().Select(x => new ArticleResponse
+            {
+                Id = x.Id,
+                Title = x.Title,
+                ContentMain = x.ContentMain,
+                ContentSummary = x.ContentSummary,
+                Picture = x.Picture,
+                ViewCount = x.ViewCount,
+                CommentCount = x.Comment.Count,
+                Category = new CategoryResponse() { Id = x.CategoryId, CategoryName = x.Category.CategoryName }
+
+
+            });
+
+            return new System.Tuple<IEnumerable<ArticleResponse>, int>(articlesResponse, totalCount);
+
+        }
+
     }
 }
