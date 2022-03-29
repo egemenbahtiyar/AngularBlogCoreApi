@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AngularBlogCoreApi.Models;
 using AngularBlogCoreApi.Responses;
+using System.Globalization;
 
 namespace AngularBlogCoreApi.Controllers
 {
@@ -68,6 +69,39 @@ namespace AngularBlogCoreApi.Controllers
             });
             return Ok(article);
 
+        }
+        [HttpGet]
+        [Route("GetArticlesArchive")]
+        public IActionResult GetArticlesArchive()
+        {
+            System.Threading.Thread.Sleep(1000);
+            var query = _context.Article.GroupBy(x => new
+            {
+                x.PublishDate.Year,
+                x.PublishDate.Month
+            }).Select(z => new
+            {
+                year = z.Key.Year,
+                month = z.Key.Month,
+                count = z.Count(),
+                mounthName = new DateTime(z.Key.Year, z.Key.Month, 1).ToString("MMMM")
+            });
+            return Ok(query);
+        }
+        [HttpGet]
+        [Route("GetArticleArchiveList/{year}/{month}/{page}/{pageSize}")]
+        public IActionResult GetArticleArchiveList(int year, int month, int page, int pageSize)
+        {
+            System.Threading.Thread.Sleep(1700);
+            var query = _context.Article.Include(x => x.Category).Include(x => x.Comment).Where(x => x.PublishDate.Year == year && x.PublishDate.Month == month).OrderByDescending(x => x.PublishDate);
+            var resultQuery = ArticlesPagination(query, page, pageSize);
+            var result = new
+            {
+                Articles = resultQuery.Item1,
+                TotalCount = resultQuery.Item2
+            };
+
+            return Ok(result);
         }
 
 
