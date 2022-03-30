@@ -258,6 +258,19 @@ namespace AngularBlogCoreApi.Controllers
 
         }
 
+        [HttpGet]
+        [Route("ArticleViewCountUp/{id}")]
+        public IActionResult ArticleViewCountUp(int id)
+        {
+
+            var article = _context.Article.Find(id);
+            article.ViewCount += 1;
+            _context.SaveChanges();
+            return Ok();
+
+        }
+
+
 
     }
 }
