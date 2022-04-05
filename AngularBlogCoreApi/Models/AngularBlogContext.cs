@@ -42,7 +42,6 @@ namespace AngularBlogCoreApi.Models
                     .HasMaxLength(500);
 
                 entity.Property(e => e.Picture)
-                    .IsRequired()
                     .HasMaxLength(300);
 
                 entity.Property(e => e.PublishDate).HasColumnType("datetime");

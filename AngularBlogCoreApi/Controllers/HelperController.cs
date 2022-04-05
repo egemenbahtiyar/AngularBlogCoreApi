@@ -17,6 +17,7 @@ namespace AngularBlogCoreApi.Controllers
         [HttpPost]
         public IActionResult SendContactEmail(Contact contact)
         {
+            System.Threading.Thread.Sleep(5000);
             try
             {
                 MailMessage mailMessage = new MailMessage();

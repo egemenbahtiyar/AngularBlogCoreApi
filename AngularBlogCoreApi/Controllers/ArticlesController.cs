@@ -24,9 +24,21 @@ namespace AngularBlogCoreApi.Controllers
         
         // GET: api/Articles
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Article>>> GetArticle()
+        public async Task<ActionResult<IEnumerable<ArticleResponse>>> GetArticle()
         {
-            return await _context.Article.ToListAsync();
+            var articles= await _context.Article.Include(x=>x.Comment).OrderByDescending(x=>x.PublishDate).Select(x=>new ArticleResponse {
+                Id = x.Id,
+                Title = x.Title,
+                Picture = x.Picture,
+                Category = new CategoryResponse { Id=x.CategoryId,CategoryName = x.Category.CategoryName},
+                CommentCount = x.Comment.Count(),
+                ViewCount = x.ViewCount,
+                PublishDate = x.PublishDate
+            
+            }).ToListAsync();
+
+            return Ok(articles);
+
         }
         
         [HttpGet]
