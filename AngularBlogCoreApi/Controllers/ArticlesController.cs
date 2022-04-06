@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using AngularBlogCoreApi.Models;
 using AngularBlogCoreApi.Responses;
 using System.Globalization;
+using System.IO;
 
 namespace AngularBlogCoreApi.Controllers
 {
@@ -218,12 +219,19 @@ namespace AngularBlogCoreApi.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
         [HttpPost]
-        public async Task<ActionResult<Article>> PostArticle(Article article)
+        public async Task<ActionResult> PostArticle(Article article)
         {
+            if (article.Category!=null)
+            {
+                article.CategoryId = article.Category.Id;
+            }
+            article.Category = null;
+            article.ViewCount = 0;
+            article.PublishDate = DateTime.Now;
             _context.Article.Add(article);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetArticle", new { id = article.Id }, article);
+            return Ok();
         }
 
         // DELETE: api/Articles/5
@@ -280,6 +288,24 @@ namespace AngularBlogCoreApi.Controllers
             _context.SaveChanges();
             return Ok();
 
+        }
+
+        [HttpPost]
+        [Route("SaveArticlePicture")]
+        public async Task<IActionResult> SaveArticlePicture(IFormFile Picture)
+        {
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(Picture.FileName);
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/ArticlePictures", fileName);
+
+            using (var stream = new FileStream(path,FileMode.Create))
+            {
+                await Picture.CopyToAsync(stream);
+            }
+            var result = new
+            {
+                path = "https://" + Request.Host + "/ArticlePictures/" + fileName
+            };
+            return Ok(result);
         }
 
 
