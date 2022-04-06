@@ -189,12 +189,13 @@ namespace AngularBlogCoreApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutArticle(int id, Article article)
         {
-            if (id != article.Id)
-            {
-                return BadRequest();
-            }
+            var firstArticle = _context.Article.Find(id);
+            firstArticle.Title = article.Title;
+            firstArticle.ContentMain = article.ContentMain;
+            firstArticle.ContentSummary = article.ContentSummary;
+            firstArticle.CategoryId = article.Category.Id;
+            firstArticle.Picture = article.Picture;
 
-            _context.Entry(article).State = EntityState.Modified;
 
             try
             {
@@ -212,7 +213,7 @@ namespace AngularBlogCoreApi.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         // POST: api/Articles
