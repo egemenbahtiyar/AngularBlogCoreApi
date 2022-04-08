@@ -237,7 +237,7 @@ namespace AngularBlogCoreApi.Controllers
 
         // DELETE: api/Articles/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<Article>> DeleteArticle(int id)
+        public async Task<ActionResult> DeleteArticle(int id)
         {
             var article = await _context.Article.FindAsync(id);
             if (article == null)
@@ -248,7 +248,7 @@ namespace AngularBlogCoreApi.Controllers
             _context.Article.Remove(article);
             await _context.SaveChangesAsync();
 
-            return article;
+            return Ok();
         }
 
         private bool ArticleExists(int id)
